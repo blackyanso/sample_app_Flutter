@@ -12,12 +12,16 @@
 ターミナル上でか
 
 ```
-pub pub get
+flutter pub get
 ```
 
 を実行してから、Android Studio を再起動してください。（※再起動しないと警告が消えないです）
 
 ## AVD Manager メニューが表示されないとき
+
+![](docs/images/checkout_window2.png)
+
+このような表示になるときの対処方法。
 
 Tools メニューに AVD Manager が表示されていない場合の対処方法
 
