@@ -86,8 +86,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         .then((path) => _fixExif(path))
         .then((path) => _cropPhoto(path))
         .then((String filePath) {
-      // Androidで動かす場合
-      // _takePicture().then((path) => _fixExif(path)).then((String filePath) {
       if (filePath != null) {
         print('preview file path:' + filePath);
         Navigator.push(
@@ -133,7 +131,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     if (Platform.isIOS) {
       return CropImageChannel.squareForIPhone(filePath);
     } else {
-      return _cropPhotoForAndroid(filePath);
+      // Crop処理がAndroidでコケるので一旦コメントアウト
+      // return _cropPhotoForAndroid(filePath);
+      return filePath;
     }
   }
 
