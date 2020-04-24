@@ -8,6 +8,8 @@ import 'package:sample_app_Flutter/ui/commons/square_camera_preview.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
+import "package:intl/intl.dart";
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'native_channels/crop_image.dart';
 
@@ -95,7 +97,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
   Future<String> _takePicture() async {
     final Directory extDir = await getTemporaryDirectory();
-    final String filePath = join(extDir.path, '${DateTime.now()}.jpg');
+    // ファイル名にスペースがあるとffmpegで取り扱えないため、datetimeからスペースを取り除く
+    final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    final String filePath = join(extDir.path, now + '.jpg');
     if (_controller.value.isTakingPicture) {
       // A capture is already pending, do nothing.
       return null;
