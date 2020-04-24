@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:sample_app_Flutter/ui/commons/square_camera_preview.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter.dart';
@@ -81,7 +82,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   void onTakePictureButtonPressed() {
-    _takePicture().then((path) => _cropPhoto(path)).then((String filePath) {
+    _takePicture()
+        .then((path) => _fixExif(path))
+        .then((path) => _cropPhoto(path))
+        .then((String filePath) {
+      // Androidで動かす場合
+      // _takePicture().then((path) => _fixExif(path)).then((String filePath) {
       if (filePath != null) {
         print('preview file path:' + filePath);
         Navigator.push(
@@ -93,6 +99,15 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         print("file path is empty");
       }
     });
+  }
+
+  Future<String> _fixExif(String filePath) async {
+    if (Platform.isAndroid) {
+      File image = await FlutterExifRotation.rotateAndSaveImage(path: filePath);
+      return image.path;
+    } else {
+      return filePath;
+    }
   }
 
   Future<String> _takePicture() async {
