@@ -76,9 +76,31 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 return Center(child: CircularProgressIndicator());
               }
             }),
-        floatingActionButton: FloatingActionButton(
-            child: Icon(Icons.camera_alt),
-            onPressed: onTakePictureButtonPressed));
+            floatingActionButton: Column(
+              verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                FloatingActionButton(
+                  heroTag: "hero1",
+                  backgroundColor: Colors.redAccent,
+                  child: Icon(Icons.camera_alt),
+                  onPressed: onTakePictureButtonPressed
+                ),
+                Container( // 余白のためContainerでラップ
+                  margin: EdgeInsets.only(bottom: 16.0),
+                  child: FloatingActionButton(
+                    heroTag: "hero2",
+                    backgroundColor: Colors.amberAccent,
+                    onPressed: () {
+                      print("pressed");
+                    },
+                  ),
+                ),
+              ],
+            ));
+//            floatingActionButton: FloatingActionButton(
+//            child: Icon(Icons.camera_alt),
+//            onPressed: onTakePictureButtonPressed));
   }
 
   void onTakePictureButtonPressed() {
