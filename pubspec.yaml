@@ -35,6 +35,8 @@ dependencies:
   flutter_ffmpeg: ^0.2.10
   intl: ^0.16.1
 
+  flutter_exif_rotation:
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
