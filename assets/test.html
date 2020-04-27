@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+</head>
+<body>
+    <img id="image01" />
+    <!-- <a href="javascript:void(0);" onclick="test();">1977</a> -->
+
+    <script src="https://cdn.rawgit.com/girliemac/filterous-2/1fc15582/demo-browser/filterous2.min.js"></script>
+    <script>
+
+      function test(sample64) {
+        var elem = document.getElementById("image01");
+        const base64 = 'data:image/png;base64,' + sample64
+
+        const filterStyle = '1977'
+        const resultImage = new Image()
+        const baseImage = new Image()
+
+        // Dartの関数呼び出し
+        resultImage.onload = function() {
+          getData.postMessage(resultImage.src);
+        }
+
+        baseImage.onload = function() {
+          filterous
+          .importImage(baseImage)
+          .applyInstaFilter(filterStyle)
+          .renderHtml(resultImage)
+        }
+        baseImage.src = base64
+
+      }
+
+    </script>
+
+  </body>
+</html>

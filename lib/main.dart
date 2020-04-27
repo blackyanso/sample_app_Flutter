@@ -7,6 +7,7 @@ import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:sample_app_Flutter/ui/commons/square_camera_preview.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter.dart';
+import 'package:sample_app_Flutter/ui/screens/picture_filter_webview.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import "package:intl/intl.dart";
@@ -76,9 +77,26 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 return Center(child: CircularProgressIndicator());
               }
             }),
-        floatingActionButton: FloatingActionButton(
-            child: Icon(Icons.camera_alt),
-            onPressed: onTakePictureButtonPressed));
+            floatingActionButton: Column(
+              verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                FloatingActionButton(
+                  heroTag: "hero1",
+                  backgroundColor: Colors.redAccent,
+                  child: Icon(Icons.camera_alt),
+                  onPressed: onTakePictureButtonPressed
+                ),
+                Container( // 余白のためContainerでラップ
+                  margin: EdgeInsets.only(bottom: 16.0),
+                  child: FloatingActionButton(
+                    heroTag: "hero2",
+                    backgroundColor: Colors.amberAccent,
+                    onPressed: onTakePictureWebViewButtonPressed,
+                  ),
+                ),
+              ],
+            ));
   }
 
   void onTakePictureButtonPressed() {
@@ -92,6 +110,24 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => PictureFilterScreen(imagePath: filePath),
+            ));
+      } else {
+        print("file path is empty");
+      }
+    });
+  }
+
+  void onTakePictureWebViewButtonPressed() {
+    _takePicture()
+        .then((path) => _fixExif(path))
+        .then((path) => _cropPhoto(path))
+        .then((String filePath) {
+      if (filePath != null) {
+        print('preview file path:' + filePath);
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PictureFilterWebViewScreen(imagePath: filePath),
             ));
       } else {
         print("file path is empty");
