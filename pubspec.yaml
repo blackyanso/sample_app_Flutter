@@ -34,6 +34,10 @@ dependencies:
   cupertino_icons: ^0.1.3
 
   flutter_native_image: ^0.0.5+2
+  flutter_ffmpeg: ^0.2.10
+  intl: ^0.16.1
+
+  flutter_exif_rotation:
 
 dev_dependencies:
   flutter_test:

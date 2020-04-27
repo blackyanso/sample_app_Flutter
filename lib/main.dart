@@ -3,11 +3,14 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:sample_app_Flutter/ui/commons/square_camera_preview.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
+import "package:intl/intl.dart";
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'native_channels/crop_image.dart';
 
@@ -79,7 +82,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   void onTakePictureButtonPressed() {
-    _takePicture().then((path) => _cropPhoto(path)).then((String filePath) {
+    _takePicture()
+        .then((path) => _fixExif(path))
+        .then((path) => _cropPhoto(path))
+        .then((String filePath) {
       if (filePath != null) {
         print('preview file path:' + filePath);
         Navigator.push(
@@ -93,9 +99,20 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     });
   }
 
+  Future<String> _fixExif(String filePath) async {
+    if (Platform.isAndroid) {
+      File image = await FlutterExifRotation.rotateAndSaveImage(path: filePath);
+      return image.path;
+    } else {
+      return filePath;
+    }
+  }
+
   Future<String> _takePicture() async {
     final Directory extDir = await getTemporaryDirectory();
-    final String filePath = join(extDir.path, '${DateTime.now()}.jpg');
+    // ファイル名にスペースがあるとffmpegで取り扱えないため、datetimeからスペースを取り除く
+    final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    final String filePath = join(extDir.path, now + '.jpg');
     if (_controller.value.isTakingPicture) {
       // A capture is already pending, do nothing.
       return null;
@@ -114,7 +131,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     if (Platform.isIOS) {
       return CropImageChannel.squareForIPhone(filePath);
     } else {
-      return _cropPhotoForAndroid(filePath);
+      // Crop処理がAndroidでコケるので一旦コメントアウト
+      // return _cropPhotoForAndroid(filePath);
+      return filePath;
     }
   }
 

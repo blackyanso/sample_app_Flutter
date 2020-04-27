@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,104 +13,46 @@ class PictureFilterScreen extends StatefulWidget {
   const PictureFilterScreen({Key key, this.imagePath}) : super(key: key);
 
   @override
-  PictureFilterScreenState createState() => PictureFilterScreenState();
+  _PictureFilterScreenState createState() => _PictureFilterScreenState();
 }
 
-class PictureFilterScreenState extends State<PictureFilterScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-  WebViewController _controller;
-  String _base64;
-  bool _notFilter = true;
+class _PictureFilterScreenState extends State<PictureFilterScreen> {
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  String filteredImagePath = '';
+  bool isDisplayFilteredImage = false;
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(title: Text('Filter')),
-  //     body: Image.file(File(widget.imagePath)),
-  //   );
-  // }
   @override
   Widget build(BuildContext context) {
-    print('build start');
-//    Uint8List _bytes = base64Decode(_base64);
-    print('fileter file path : ' + widget.imagePath);
-    print('fileter flg : ' + _notFilter.toString());
-    if (_notFilter) {
-      final bytes = Io.File(widget.imagePath).readAsBytesSync();
-      _base64 = base64Encode(bytes);
-      print(_base64.substring(0, 100));
-    }
-    Uint8List _bytes = base64Decode(_base64);    return Scaffold(
-      appBar: AppBar(
-        title: Text('Filter'),
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Filter')),
+      body: Image.file(
+          File(isDisplayFilteredImage ? filteredImagePath : widget.imagePath)
       ),
-      body: ListView(
-        itemExtent: 500,
-        children: <Widget>[
-          Image.memory(_bytes),
-          WebView(
-            // onWebViewCreatedはWebViewが生成された時に行う処理を記述できます
-            onWebViewCreated: (WebViewController webViewController) async {
-              _controller = webViewController; // 生成されたWebViewController情報を取得する
-              await _loadHtmlFromAssets(); // HTMLファイルのURL（ローカルファイルの情報）をControllerに追加する処理
-            },
-            javascriptMode: JavascriptMode.unrestricted,
-            // JSから関数を呼び出す為にjavascriptChannelsで紐付けを行う
-            javascriptChannels: Set.from([
-              JavascriptChannel(
-                  name: "getData",
-                  onMessageReceived: (JavascriptMessage result) {
-                    // イベントが発動した時に呼び出したい関数
-                    _changeImage(result.message);
-                  }),
-            ]),
-          ),
-        ],
-      ),
-      // 画面下にボタン配置
       floatingActionButton: FloatingActionButton(
-        onPressed: _addFilter,
+        child: Icon(Icons.filter),
+        onPressed: onFilterPictureButtonPressed,
       ),
     );
   }
 
-  /// フィルターをかけるfunctionを呼ぶ
-  void _addFilter() {
-    print('_addFilter start');
-    // JSメソッド呼び出し
-    // WebViewControllerクラスのevaluateJavascriptの引数に呼び出すJSメソッドを入れる
-    _controller.evaluateJavascript("test(\"" + _base64 + "\");");
-    _notFilter = false;
+  void onFilterPictureButtonPressed() async {
+
+    // 初回のみフィルター加工する
+    if (filteredImagePath.isEmpty) {
+      await _filterPicture().then((path) => filteredImagePath = path);
+    }
+    isDisplayFilteredImage = !isDisplayFilteredImage;
+    setState(() {});
   }
 
-  // フィルターかかったデータに入れ替え
-  void _changeImage(String str) {
-    print('_changeImage start');
-    setState(() {
-      _base64 = str.replaceFirst('data:image/jpeg;base64,', '');
-    });
-  }
+  Future<String> _filterPicture() async {
+    final FlutterFFmpeg _flutterFFmpeg = new FlutterFFmpeg();
+    final String outputPath = widget.imagePath + '_filtered.jpg';
+    int rc = await _flutterFFmpeg.execute("-i ${widget.imagePath} -y -vf hue=s=0 -pix_fmt yuv420p $outputPath");
+    print("FFmpeg process exited with rc $rc");
+    print('filtered file path:' + outputPath);
 
-  /// HTMLファイルを読み込む処理
-  Future _loadHtmlFromAssets() async {
-    print('_loadHtmlFromAssets start');
-    //　HTMLファイルを読み込んでHTML要素を文字列で返す
-    String fileText = await rootBundle.loadString('assets/test.html');
-    // <WebViewControllerのloadUrlメソッドにローカルファイルのURI情報を渡す>
-    // WebViewControllerはWebViewウィジェットに情報を与えることができます。
-    // <Uri.dataFromStringについて>
-    // パラメータで指定されたエンコーディングまたは文字セット（指定されていないか認識されない場合はデフォルトでUS-ASCII）
-    // を使用してコンテンツをバイトに変換し、結果のデータURIにバイトをエンコードします。
-    _controller.loadUrl(Uri.dataFromString(fileText,
-            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
+    return outputPath;
   }
 }
