@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:typed_data';
@@ -12,14 +10,17 @@ class PictureFilterWebViewScreen extends StatefulWidget {
   const PictureFilterWebViewScreen({Key key, this.imagePath}) : super(key: key);
 
   @override
-  PictureFilterWebViewScreenState createState() => PictureFilterWebViewScreenState();
+  PictureFilterWebViewScreenState createState() =>
+      PictureFilterWebViewScreenState();
 }
 
-class PictureFilterWebViewScreenState extends State<PictureFilterWebViewScreen> {
+class PictureFilterWebViewScreenState
+    extends State<PictureFilterWebViewScreen> {
   @override
   void initState() {
     super.initState();
   }
+
   WebViewController _controller;
   String _base64;
   bool _notFilter = true;
@@ -39,7 +40,8 @@ class PictureFilterWebViewScreenState extends State<PictureFilterWebViewScreen> 
       _base64 = base64Encode(bytes);
       print(_base64.substring(0, 100));
     }
-    Uint8List _bytes = base64Decode(_base64);    return Scaffold(
+    Uint8List _bytes = base64Decode(_base64);
+    return Scaffold(
       appBar: AppBar(
         title: Text('Filter'),
       ),
@@ -101,7 +103,7 @@ class PictureFilterWebViewScreenState extends State<PictureFilterWebViewScreen> 
     // パラメータで指定されたエンコーディングまたは文字セット（指定されていないか認識されない場合はデフォルトでUS-ASCII）
     // を使用してコンテンツをバイトに変換し、結果のデータURIにバイトをエンコードします。
     _controller.loadUrl(Uri.dataFromString(fileText,
-        mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+            mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
         .toString());
   }
 }

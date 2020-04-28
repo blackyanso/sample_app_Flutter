@@ -11,7 +11,6 @@ import 'package:sample_app_Flutter/ui/screens/picture_filter_webview.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import "package:intl/intl.dart";
-import 'package:intl/date_symbol_data_local.dart';
 
 import 'native_channels/crop_image.dart';
 
@@ -45,6 +44,7 @@ class TakePictureScreen extends StatefulWidget {
 class TakePictureScreenState extends State<TakePictureScreen> {
   CameraController _controller;
   Future<void> _initializeControllerFuture;
+  String videoPath;
 
   @override
   void initState() {
@@ -77,26 +77,38 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 return Center(child: CircularProgressIndicator());
               }
             }),
-            floatingActionButton: Column(
-              verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                FloatingActionButton(
-                  heroTag: "hero1",
-                  backgroundColor: Colors.redAccent,
-                  child: Icon(Icons.camera_alt),
-                  onPressed: onTakePictureButtonPressed
-                ),
-                Container( // 余白のためContainerでラップ
-                  margin: EdgeInsets.only(bottom: 16.0),
-                  child: FloatingActionButton(
-                    heroTag: "hero2",
-                    backgroundColor: Colors.amberAccent,
-                    onPressed: onTakePictureWebViewButtonPressed,
-                  ),
-                ),
-              ],
-            ));
+        floatingActionButton: Column(
+          verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            FloatingActionButton(
+                heroTag: "hero1",
+                backgroundColor: Colors.redAccent,
+                child: Icon(Icons.camera_alt),
+                onPressed: onTakePictureButtonPressed),
+            Container(
+              // 余白のためContainerでラップ
+              margin: EdgeInsets.only(bottom: 16.0),
+              child: FloatingActionButton(
+                heroTag: "hero2",
+                backgroundColor: Colors.amberAccent,
+                onPressed: onTakePictureWebViewButtonPressed,
+              ),
+            ),
+            Container(
+              // 余白のためContainerでラップ
+              margin: EdgeInsets.only(bottom: 16.0),
+              child: FloatingActionButton(
+                heroTag: "hero3",
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.movie),
+                onPressed: _controller.value.isRecordingVideo
+                    ? onStopButtonPressed
+                    : onVideoRecordButtonPressed,
+              ),
+            ),
+          ],
+        ));
   }
 
   void onTakePictureButtonPressed() {
@@ -127,11 +139,28 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PictureFilterWebViewScreen(imagePath: filePath),
+              builder: (context) =>
+                  PictureFilterWebViewScreen(imagePath: filePath),
             ));
       } else {
         print("file path is empty");
       }
+    });
+  }
+
+  void onVideoRecordButtonPressed() {
+    _startVideoRecording().then((String filePath) {
+      if (mounted) setState(() {});
+      if (filePath != null) print(filePath);
+      print('録画終了');
+      print('onVideoRecordButtonPressed then');
+    });
+  }
+
+  void onStopButtonPressed() {
+    _stopVideoRecording().then((_) {
+      if (mounted) setState(() {});
+      print('onStopButtonPressed then');
     });
   }
 
@@ -161,6 +190,50 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       return null;
     }
     return filePath;
+  }
+
+  Future<String> _startVideoRecording() async {
+    print('_startVideoRecording start');
+    if (!_controller.value.isInitialized) {
+      print('Error: select a camera first.');
+      return null;
+    }
+    final Directory extDir = await getTemporaryDirectory();
+    final String dirPath = '${extDir.path}/Movies/sample_app';
+    final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    await Directory(dirPath).create(recursive: true);
+    final String filePath = join(dirPath, now + '.mp4');
+
+    if (_controller.value.isRecordingVideo) {
+      // A recording is already started, do nothing.
+      return null;
+    }
+
+    try {
+      videoPath = filePath;
+      print('startVideoRecording ...');
+      await _controller.startVideoRecording(filePath);
+      print('... startVideoRecording');
+    } on CameraException catch (e) {
+      print(e);
+      return null;
+    }
+    return filePath;
+  }
+
+  Future<void> _stopVideoRecording() async {
+    print('_stopVideoRecording start');
+    if (!_controller.value.isRecordingVideo) {
+      return null;
+    }
+
+    try {
+      await _controller.stopVideoRecording();
+    } on CameraException catch (e) {
+      print(e);
+      return null;
+    }
+    return null;
   }
 
   Future<String> _cropPhoto(String filePath) async {
