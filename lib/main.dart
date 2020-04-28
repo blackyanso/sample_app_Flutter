@@ -146,7 +146,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<String> _takePicture() async {
-    await _requrestPermission();
+    var permission = await _requrestPermission();
+    if (!permission) {
+      print('storage permission deny');
+      return null;
+    }
     final Directory extDir = await getTemporaryDirectory();
     // ファイル名にスペースがあるとffmpegで取り扱えないため、datetimeからスペースを取り除く
     final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
@@ -193,11 +197,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     return croppedFile.path;
   }
 
-  Future<void> _requrestPermission() async {
+  Future<bool> _requrestPermission() async {
     // https://codinglatte.com/posts/flutter/handling-requesting-for-permissions-like-a-pro-in-flutter/
     // https://pub.dev/packages/permission_handler#-readme-tab-
     if (Platform.isAndroid) {
-      await Permission.storage.request().isGranted;
+      return await Permission.storage.request().isGranted;
+    } else {
+      return true;
     }
   }
 }
