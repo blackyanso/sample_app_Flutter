@@ -75,10 +75,11 @@ class _MovieFilterScreenState extends State<MovieFilterScreen> {
 
   Future<String> _filterVideo() async {
     final FlutterFFmpeg _flutterFFmpeg = new FlutterFFmpeg();
-    final String outputPath = widget.videoPath + '_filtered.mp4';
+    final String outputPath =
+        widget.videoPath.replaceAll('.mp4', '') + '_filtered.mp4';
     print("video input:" + widget.videoPath);
     int rc = await _flutterFFmpeg.execute(
-        "-i ${widget.imagePath} -y -vf hue=s=0 -pix_fmt yuv420p $outputPath");
+        "-i ${widget.videoPath} -y -vf hue=s=0 -pix_fmt yuv420p $outputPath");
     print("FFmpeg process exited with rc $rc");
     print('filtered movie file path:' + outputPath);
 
