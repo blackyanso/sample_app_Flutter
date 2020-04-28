@@ -6,12 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:sample_app_Flutter/ui/commons/square_camera_preview.dart';
+import 'package:sample_app_Flutter/ui/screens/movie_filter.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter.dart';
 import 'package:sample_app_Flutter/ui/screens/picture_filter_webview.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import "package:intl/intl.dart";
-
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'native_channels/crop_image.dart';
 
 Future<void> main() async {
@@ -92,6 +93,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               child: FloatingActionButton(
                 heroTag: "hero2",
                 backgroundColor: Colors.amberAccent,
+                child: Icon(Icons.camera_alt),
                 onPressed: onTakePictureWebViewButtonPressed,
               ),
             ),
@@ -101,7 +103,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               child: FloatingActionButton(
                 heroTag: "hero3",
                 backgroundColor: Colors.blue,
-                child: Icon(Icons.movie),
+                child: _controller.value.isRecordingVideo
+                    ? Icon(Icons.move_to_inbox)
+                    : Icon(Icons.movie),
                 onPressed: _controller.value.isRecordingVideo
                     ? onStopButtonPressed
                     : onVideoRecordButtonPressed,
@@ -161,6 +165,19 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     _stopVideoRecording().then((_) {
       if (mounted) setState(() {});
       print('onStopButtonPressed then');
+      _slicePicture(videoPath).then((String filePath) {
+        if (filePath != null) {
+          print('preview file path:' + filePath);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MovieFilterScreen(
+                    imagePath: filePath, videoPath: videoPath),
+              ));
+        } else {
+          print("file path is empty");
+        }
+      });
     });
   }
 
@@ -262,5 +279,19 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     File croppedFile = await FlutterNativeImage.cropImage(
         filePath, 0, offset.round(), width, width);
     return croppedFile.path;
+  }
+
+  // 動画から写真をスライス
+  // https://stackoverflow.com/questions/10225403/how-can-i-extract-a-good-quality-jpeg-image-from-an-h264-video-file-with-ffmpeg
+  Future<String> _slicePicture(String filePath) async {
+    final Directory extDir = await getTemporaryDirectory();
+    final FlutterFFmpeg _flutterFFmpeg = new FlutterFFmpeg();
+    final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    final String outputPath = join(extDir.path, now + '_slice.jpg');
+    int rc = await _flutterFFmpeg
+        .execute("-i ${filePath} -qscale:v 4 -frames:v 1 $outputPath");
+    print("FFmpeg process exited with rc $rc");
+    print('slice picture file path:' + outputPath);
+    return outputPath;
   }
 }
