@@ -39,6 +39,8 @@ dependencies:
 
   flutter_exif_rotation:
 
+  permission_handler: ^5.0.0+hotfix.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -11,7 +11,7 @@ import 'package:sample_app_Flutter/ui/screens/picture_filter_webview.dart';
 import 'package:path/path.dart' show join;
 import 'package:path_provider/path_provider.dart';
 import "package:intl/intl.dart";
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'native_channels/crop_image.dart';
 
@@ -77,26 +77,26 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 return Center(child: CircularProgressIndicator());
               }
             }),
-            floatingActionButton: Column(
-              verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                FloatingActionButton(
-                  heroTag: "hero1",
-                  backgroundColor: Colors.redAccent,
-                  child: Icon(Icons.camera_alt),
-                  onPressed: onTakePictureButtonPressed
-                ),
-                Container( // 余白のためContainerでラップ
-                  margin: EdgeInsets.only(bottom: 16.0),
-                  child: FloatingActionButton(
-                    heroTag: "hero2",
-                    backgroundColor: Colors.amberAccent,
-                    onPressed: onTakePictureWebViewButtonPressed,
-                  ),
-                ),
-              ],
-            ));
+        floatingActionButton: Column(
+          verticalDirection: VerticalDirection.up, // childrenの先頭を下に配置
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            FloatingActionButton(
+                heroTag: "hero1",
+                backgroundColor: Colors.redAccent,
+                child: Icon(Icons.camera_alt),
+                onPressed: onTakePictureButtonPressed),
+            Container(
+              // 余白のためContainerでラップ
+              margin: EdgeInsets.only(bottom: 16.0),
+              child: FloatingActionButton(
+                heroTag: "hero2",
+                backgroundColor: Colors.amberAccent,
+                onPressed: onTakePictureWebViewButtonPressed,
+              ),
+            ),
+          ],
+        ));
   }
 
   void onTakePictureButtonPressed() {
@@ -127,7 +127,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PictureFilterWebViewScreen(imagePath: filePath),
+              builder: (context) =>
+                  PictureFilterWebViewScreen(imagePath: filePath),
             ));
       } else {
         print("file path is empty");
@@ -145,6 +146,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<String> _takePicture() async {
+    await _requrestPermission();
     final Directory extDir = await getTemporaryDirectory();
     // ファイル名にスペースがあるとffmpegで取り扱えないため、datetimeからスペースを取り除く
     final String now = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
@@ -189,5 +191,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     File croppedFile = await FlutterNativeImage.cropImage(
         filePath, 0, offset.round(), width, width);
     return croppedFile.path;
+  }
+
+  Future<void> _requrestPermission() async {
+    // https://codinglatte.com/posts/flutter/handling-requesting-for-permissions-like-a-pro-in-flutter/
+    // https://pub.dev/packages/permission_handler#-readme-tab-
+    if (Platform.isAndroid) {
+      await Permission.storage.request().isGranted;
+    }
   }
 }
