@@ -257,9 +257,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     if (Platform.isIOS) {
       return CropImageChannel.squareForIPhone(filePath);
     } else {
-      // Crop処理がAndroidでコケるので一旦コメントアウト
-      // return _cropPhotoForAndroid(filePath);
-      return filePath;
+      return _cropPhotoForAndroid(filePath);
+      // 実機で動かした場合に、Crop処理でCrashする場合は上の行をコメントアウトして下の行のコメントアウトを解除すること
+      // return filePath;
     }
   }
 
